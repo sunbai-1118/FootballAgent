@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -c ' *)",
+      "Bash(.venv/Scripts/python.exe -m compileall -q config models schemas utils crud routers main.py)",
+      "Bash(PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -c \"import app; print\\('app.py OK ->', app.app.title\\)\")",
+      "Bash(PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -c \"import main; print\\('main.py OK ->', main.app.title\\)\")",
+      "Bash(./.venv/Scripts/python.exe -X utf8 -c ' *)"
+    ]
+  }
+}
