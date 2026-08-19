@@ -1,0 +1,53 @@
+# AI Agent 多模态检索基础设施
+# 一键启动:Qdrant 向量库 + 文本嵌入服务(bge) + 图片/多模态嵌入服务(Chinese-CLIP)
+# 使用: cd docker && docker compose up -d --build
+# 唯一项目名:避免与其它名为 "docker" 的 compose 项目(旧 data-agent 栈)冲突导致孤儿容器警告
+name: soccer-news-agent
+
+services:
+  qdrant:
+    image: qdrant/qdrant
+    container_name: soccer-news-qdrant
+    restart: unless-stopped
+    ports:
+      - "6335:6333"   # REST API(独立端口,避免与 data-agent 项目的 6333 冲突)
+      - "6336:6334"   # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  text-embedding:
+    build: ./text-embedding
+    container_name: soccer-news-text-embedding
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      - MODEL=${TEXT_EMBEDDING_MODEL:-BAAI/bge-small-zh-v1.5}
+      - HF_ENDPOINT=${HF_ENDPOINT:-https://huggingface.co}
+    volumes:
+      - hf_cache:/root/.cache/huggingface   # 模型下载缓存,避免重复下载
+
+  image-embedding:
+    build: ./image-embedding
+    container_name: soccer-news-image-embedding
+    restart: unless-stopped
+    ports:
+      - "8002:8000"
+    environment:
+      - MODEL=${IMAGE_EMBEDDING_MODEL:-OFA-Sys/chinese-clip-vit-base-patch16}
+      - HF_ENDPOINT=${HF_ENDPOINT:-https://huggingface.co}
+    volumes:
+      - hf_cache_img:/root/.cache/huggingface
+
+volumes:
+  # qdrant 数据卷:本项目独立卷,与 data-agent 项目的 docker_qdrant_data 完全隔离
+  qdrant_data:
+    name: soccer_news_qdrant_data
+  # 嵌入模型缓存:本项目自有外部卷(重建时避免重复下载;全新环境需先创建:
+  # docker volume create docker_hf_cache docker_hf_cache_img)
+  hf_cache:
+    external: true
+    name: docker_hf_cache
+  hf_cache_img:
+    external: true
+    name: docker_hf_cache_img
