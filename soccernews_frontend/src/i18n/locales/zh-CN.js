@@ -16,7 +16,8 @@ export default {
   },
   nav: {
     home: '首页',
-    aiChat: 'AI问答',
+    football: '数据',
+    aiChat: 'AI助手',
     my: '我的'
   },
   home: {

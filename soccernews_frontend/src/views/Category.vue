@@ -5,7 +5,7 @@
       :left-text="$t('common.back')"
       left-arrow
       @click-left="onClickLeft"
-      fixed 
+      sticky
     />
     
     <div class="category-container">
@@ -20,7 +20,6 @@
       </van-grid>
     </div>
     
-    <tab-bar />
   </div>
 </template>
 
@@ -28,7 +27,6 @@
 import { useNewsStore } from '../store/modules/news'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import TabBar from '../components/TabBar.vue'
 import { computed } from 'vue'
 
 const newsStore = useNewsStore()
@@ -79,33 +77,33 @@ const getCategoryTranslation = (categoryName) => {
 
 <style scoped>
 .category {
-  padding-top: 46px;
   padding-bottom: 50px;
-  background-color: #f7f8fa;
+  background-color: var(--background-color);
   min-height: 100vh;
 }
 
 .category-container {
-  padding: 16px;
-  background-color: #fff;
+  padding: 0;
+  background-color: var(--card-bg);
   margin-top: 12px;
-  border-radius: 8px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
 }
 
 :deep(.van-grid-item__content) {
-  background-color: #f5f7fa;
-  border-radius: 8px;
-  padding: 20px 0;
+  background-color: var(--secondary-color);
+  border-radius: var(--radius);
+  padding: 14px 0;
 }
 
 :deep(.van-grid-item__icon) {
-  font-size: 28px;
-  color: #1989fa;
+  font-size: var(--font-xl);
+  color: var(--pitch-700);
 }
 
 :deep(.van-grid-item__text) {
   margin-top: 8px;
-  color: #333;
+  color: var(--text-color);
   font-size: 14px;
 }
 </style>

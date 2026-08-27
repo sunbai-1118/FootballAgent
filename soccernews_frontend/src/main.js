@@ -34,6 +34,7 @@ import './style.css'
 
 // 引入国际化
 import { setupI18n } from './i18n'
+import TabBar from './components/TabBar.vue'
 
 const app = createApp(App)
 
@@ -65,6 +66,7 @@ app.use(Popup)
 // 使用路由和状态管理
 app.use(router)
 app.use(pinia)
+app.component('TabBar', TabBar)
 
 app.mount('#app')
 

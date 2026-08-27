@@ -2,11 +2,12 @@
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import select, update
+from sqlalchemy import or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.users import User
 from schemas.users import UserUpdate
+from models.user_memory import UserMemory
 from utils.auth import hash_password, verify_password
 
 # 3.封装用户相关数据库操作
@@ -54,13 +55,12 @@ async def authenticate_user(db: AsyncSession, username: str, password: str) -> O
 
 # 更新用户信息 : update更新 -> 检查是否命中 -> 获取更新后的用户
 async def update_user_info(db: AsyncSession, username: str, user_data: UserUpdate) -> User:
-    # update(User).where(User.username == username).values(字段=值，字段=值)
-    # update 是一个pydantic类型，得到字典 -> **解包
-    # 没有设置的值不更新
-    query = update(User).where(User.username == username).values(**user_data.model_dump(
-        exclude_unset=True,
-        exclude_none=True
-    ))
+    values = user_data.model_dump(exclude_unset=True, exclude_none=True)
+    favorite_team = values.pop("favoriteTeam", None)
+    if favorite_team is not None:
+        values["favorite_team"] = favorite_team
+
+    query = update(User).where(User.username == username).values(**values)
     result = await db.execute(query)
     await db.commit()
 
@@ -70,6 +70,35 @@ async def update_user_info(db: AsyncSession, username: str, user_data: UserUpdat
 
     # 获取一下更新的用户
     updated_user = await get_user_by_username(db, username)
+
+    if favorite_team is not None and updated_user is not None:
+        content = f"用户的主队是{favorite_team}"
+        existing = await db.execute(
+            select(UserMemory).where(
+                UserMemory.user_id == updated_user.id,
+                or_(
+                    UserMemory.content.like("用户的主队是%"),
+                    UserMemory.content.like("用户喜欢的主队是%"),
+                ),
+            ).order_by(UserMemory.id.desc())
+        )
+        old_memories = list(existing.scalars().all())
+        for memory in old_memories[1:]:
+            await db.delete(memory)
+        if old_memories:
+            old_memories[0].content = content
+            old_memories[0].memory_type = "preference"
+            old_memories[0].importance = 5
+            old_memories[0].source_session_id = None
+        else:
+            db.add(UserMemory(
+                user_id=updated_user.id,
+                content=content,
+                memory_type="preference",
+                importance=5,
+            ))
+        await db.commit()
+
     return updated_user
 
 # 修改用户密码 ： 验证旧密码 -> 新密码加密 -> 修改密码
@@ -88,7 +117,5 @@ async def update_user_password(db: AsyncSession, user: User, old_password: str, 
     await db.commit()
     await db.refresh(user)
     return True
-
-
 
 

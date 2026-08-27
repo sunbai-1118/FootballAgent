@@ -1,6 +1,16 @@
 <template>
   <div class="ai-chat-container">
-    <van-nav-bar title="AI问答" fixed />
+    <van-nav-bar>
+      <template #left>
+        <div class="nav-brand">
+          <span class="brand-mark">🤖</span>
+          <span class="brand-name">足球AI助手</span>
+        </div>
+      </template>
+      <template #right>
+        <van-icon name="replay" size="18" @click="startNewSession" />
+      </template>
+    </van-nav-bar>
 
     <div class="chat-content">
       <div class="messages-container" ref="messagesContainer">
@@ -46,7 +56,7 @@
           rows="1"
           autosize
           type="textarea"
-          placeholder="请输入问题..."
+          :placeholder="$t('aiChat.placeholder')"
           class="chat-input"
           @keypress.enter.prevent="sendMessage"
         />
@@ -61,14 +71,18 @@
       </div>
     </div>
 
-    <tab-bar />
+    <div class="login-hint" v-if="!userStore.getLoginStatus">
+      <p>登录后可询问比赛、球员、战术与本站新闻</p>
+      <van-button round type="primary" size="small" @click="router.push('/login')">去登录</van-button>
+    </div>
+
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue';
-import TabBar from '../components/TabBar.vue';
 import { showToast } from 'vant';
+import { useRouter } from 'vue-router';
 import * as marked from 'marked';
 import DOMPurify from 'dompurify';
 import { apiConfig } from '../config/api';
@@ -98,6 +112,7 @@ const messagesContainer = ref(null);
 const isLoading = ref(false);
 
 const userStore = useUserStore();
+const router = useRouter();
 
 // 会话ID:持久化到 localStorage(按用户隔离),刷新页面后恢复对话上下文
 const sessionKey = () => `ai_chat_session_${userStore.userInfo?.id || 'anon'}`;
@@ -268,6 +283,14 @@ watch(messages, () => {
   nextTick(scrollToBottom);
 }, { deep: true });
 
+const startNewSession = () => {
+  messages.value = [
+    { role: 'assistant', content: '你好！我是⚽足球资讯助手，英超、西甲、欧冠、世界杯……你想聊哪场比赛或哪支球队？' }
+  ];
+  chatSessionId.value = null;
+  localStorage.removeItem(sessionKey());
+};
+
 // 刷新页面后恢复对话历史
 const restoreHistory = async () => {
   const sid = chatSessionId.value;
@@ -280,6 +303,11 @@ const restoreHistory = async () => {
     const json = await resp.json();
     if (json.code === 200 && json.data?.messages?.length) {
       messages.value = json.data.messages.map(m => ({ role: m.role, content: m.content }));
+      if (messages.value.length >= 2) {
+        const latest = messages.value[messages.value.length - 1];
+        latest.chatId = `history-${Date.now()}`;
+        latest.feedback = null;
+      }
     } else {
       // 会话已失效:清除本地 sessionId,回到欢迎语
       chatSessionId.value = null;
@@ -301,11 +329,12 @@ onMounted(async () => {
 
 <style scoped>
 .ai-chat-container {
+  position: relative;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  padding-top: 46px;
-  padding-bottom: 50px;
+  height: calc(100dvh - 56px - var(--safe-area-inset-bottom));
+  min-height: 0;
+  overflow: hidden;
   box-sizing: border-box;
 }
 
@@ -318,13 +347,15 @@ onMounted(async () => {
 
 .messages-container {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 10px;
+  overscroll-behavior: contain;
+  padding: 8px 10px;
 }
 
 .message {
-  margin-bottom: 10px;
-  max-width: 80%;
+  margin-bottom: 7px;
+  max-width: 88%;
 }
 
 .user-message {
@@ -335,53 +366,108 @@ onMounted(async () => {
   margin-right: auto;
 }
 
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-name {
+  color: var(--white);
+  font-size: var(--font-md);
+  font-weight: 750;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+}
+
+.login-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(76vw, 270px);
+  padding: 18px 15px 16px;
+  text-align: center;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, .95);
+  color: var(--text-color-light);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(12px);
+}
+
+.login-hint p {
+  margin-bottom: 11px;
+  font-size: var(--font-sm);
+  line-height: 1.5;
+}
+
 .message-content {
-  padding: 10px;
-  border-radius: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  font-size: var(--font-sm);
+  line-height: 1.6;
   word-break: break-word;
+  box-shadow: var(--shadow-sm);
 }
 
 .user-message .message-content {
-  background-color: #007aff;
+  border-bottom-right-radius: 6px;
+  background: linear-gradient(120deg, var(--pitch-800), var(--grass-500));
   color: white;
 }
 
 .ai-message .message-content {
-  background-color: #f2f2f2;
-  color: #333;
+  border-bottom-left-radius: 6px;
+  background-color: var(--card-bg);
+  color: var(--text-color);
 }
 
 .input-container {
   display: flex;
-  padding: 10px;
-  border-top: 1px solid #eee;
-  background-color: #fff;
+  gap: 7px;
+  align-items: flex-end;
+  padding: 7px 8px;
+  border-top: 1px solid rgba(219, 231, 224, .7);
+  background: rgba(255, 255, 255, .96);
+  backdrop-filter: blur(16px);
 }
 
 .chat-input {
   flex: 1;
-  margin-right: 10px;
+  margin-right: 7px;
+  --van-field-background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  overflow: hidden;
 }
 
 .send-button {
   align-self: flex-end;
+  --van-button-small-height: 30px;
+  --van-button-normal-height: 30px;
+  padding: 0 12px;
+  font-size: var(--font-sm);
 }
 
 /* 工具调用过程卡片 */
 .tool-steps {
-  margin-bottom: 8px;
+  margin-bottom: 5px;
 }
 
 .tool-step {
   display: flex;
   align-items: center;
-  font-size: 12px;
-  color: #666;
+  font-size: var(--font-xs);
+  color: var(--text-color-light);
   padding: 3px 0;
 }
 
 .tool-step.done {
-  color: #07c160;
+  color: var(--grass-500);
 }
 
 .tool-icon {
@@ -398,15 +484,15 @@ onMounted(async () => {
 .feedback-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 6px;
+  gap: 6px;
+  margin-top: 4px;
   padding: 0 4px;
 }
 
 .fb-btn {
   border: none;
   background: transparent;
-  font-size: 15px;
+  font-size: 13px;
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 4px;
@@ -415,21 +501,21 @@ onMounted(async () => {
 
 .fb-btn.active {
   opacity: 1;
-  background: rgba(25, 137, 250, 0.12);
+  background: rgba(0, 184, 108, .12);
 }
 
 .verified-tag {
   font-size: 11px;
-  color: #07c160;
-  background: rgba(7, 193, 96, 0.1);
+  color: var(--pitch-700);
+  background: rgba(0, 184, 108, .12);
   padding: 1px 6px;
   border-radius: 999px;
   margin-right: 4px;
 }
 
 .verified-tag.warn {
-  color: #ee0a24;
-  background: rgba(238, 10, 36, 0.08);
+  color: #d64b2c;
+  background: rgba(238, 10, 36, .08);
 }
 
 /* Markdown 样式 */
@@ -507,7 +593,7 @@ onMounted(async () => {
 }
 
 :deep(a) {
-  color: #1989fa;
+  color: var(--pitch-700);
   text-decoration: none;
 }
 </style>

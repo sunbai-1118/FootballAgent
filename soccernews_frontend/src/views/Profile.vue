@@ -4,18 +4,18 @@
       title="个人信息"
       left-arrow
       @click-left="$router.back()"
-      fixed
+      sticky
     />
     
     <div class="profile-container">
       <van-cell-group inset class="avatar-group">
-        <van-cell title="头像" center>
+        <van-cell title="头像" value="点击上传" is-link center @click="avatarInput?.click()">
           <template #right-icon>
             <van-image
               round
               width="60"
               height="60"
-              src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg"
+              :src="userAvatar"
             />
           </template>
         </van-cell>
@@ -23,7 +23,8 @@
       
       <van-cell-group inset class="info-group">
         <van-cell title="用户名" :value="userInfo.username || 'admin'" />
-        <van-cell title="账号ID" :value="`ID: heima-${userId || 'N/A'}`" />
+        <van-cell title="账号ID" :value="`ID: ${userInfo.id || 'N/A'}`" />
+        <van-cell title="我的主队" :value="favoriteTeam || '未选择'" />
         <van-cell title="个人简介" :value="userBio || '暂无简介'" is-link @click="showBioDialog" />
       </van-cell-group>
       
@@ -31,6 +32,23 @@
         <van-cell title="修改密码" is-link @click="showPasswordConfirm" />
       </van-cell-group>
     </div>
+
+    <input ref="avatarInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden-input" @change="handleAvatarChange" />
+
+    <van-popup v-model:show="showTeamPopup" position="bottom" round :style="{ height: '55%' }">
+      <div class="popup-title">选择主队</div>
+      <div class="team-list">
+        <button
+          v-for="team in teamOptions"
+          :key="team"
+          class="team-item"
+          :class="{ active: favoriteTeam === team }"
+          @click="saveFavoriteTeam(team)"
+        >
+          ⚽ {{ team }}
+        </button>
+      </div>
+    </van-popup>
   </div>
 </template>
 
@@ -39,10 +57,13 @@ import { ref, computed, h, onMounted } from 'vue';
 import { useUserStore } from '../store/user';
 import { showDialog, showToast, showLoadingToast, showSuccessToast, showFailToast } from 'vant';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
-import { apiConfig } from '../config/api';
 
 const router = useRouter();
+const avatarInput = ref(null);
+const showTeamPopup = ref(false);
+const uploadingAvatar = ref(false);
+const savingFavoriteTeam = ref(false);
+const teamOptions = ['曼城', '阿森纳', '利物浦', '皇家马德里', '巴塞罗那', '拜仁慕尼黑', '国际米兰', 'AC米兰', '巴黎圣日耳曼', '曼联', '切尔西', '其他球队'];
 const userStore = useUserStore();
 
 // 初始化用户状态
@@ -87,8 +108,48 @@ onMounted(async () => {
 });
 
 const userInfo = computed(() => userStore.userInfo);
-const userId = computed(() => userStore.token ? userStore.token.substring(0, 5) : '');
 const userBio = computed(() => userStore.userInfo?.bio || '暂无简介');
+const userAvatar = computed(() => userStore.userInfo?.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg');
+const favoriteTeam = computed(() => userStore.userInfo?.favoriteTeam || '');
+
+const handleAvatarChange = async (event) => {
+  const file = event.target.files?.[0];
+  event.target.value = '';
+  if (!file || uploadingAvatar.value) return;
+
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    showFailToast('仅支持 JPG / PNG / WebP 图片');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showFailToast('头像文件不能超过 5MB');
+    return;
+  }
+
+  uploadingAvatar.value = true;
+  showLoadingToast({ message: '上传中...', forbidClick: true, duration: 0 });
+  const result = await userStore.uploadAvatar(file);
+  if (result.success) {
+    showSuccessToast('头像已更新');
+  } else {
+    showFailToast(result.message || '头像上传失败');
+  }
+  uploadingAvatar.value = false;
+};
+
+const saveFavoriteTeam = async (team) => {
+  if (savingFavoriteTeam.value) return;
+  savingFavoriteTeam.value = true;
+  const result = await userStore.updateUserProfile({ favoriteTeam: team });
+  savingFavoriteTeam.value = false;
+
+  if (result.success) {
+    showTeamPopup.value = false;
+    showSuccessToast('AI 已记住你的主队');
+  } else {
+    showFailToast(result.message || '保存失败');
+  }
+};
 
 const showPasswordConfirm = () => {
   // 使用ref创建响应式变量
@@ -231,12 +292,49 @@ const showBioDialog = () => {
 <style scoped>
 .profile-page {
   min-height: 100vh;
-  background-color: #f7f8fa;
+  padding-bottom: calc(72px + var(--safe-area-inset-bottom));
+  background-color: var(--background-color);
 }
 
 .profile-container {
-  padding-top: 56px;
-  padding-bottom: 20px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.popup-title {
+  padding: 12px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.team-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 0 12px 16px;
+  overflow-y: auto;
+}
+
+.team-item {
+  padding: 13px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-color);
+  background: var(--card-bg);
+  font-size: 14px;
+}
+
+.team-item.active {
+  border-color: var(--grass-500);
+  color: var(--pitch-700);
+  font-weight: 700;
+  background: var(--secondary-color);
 }
 
 .avatar-group,

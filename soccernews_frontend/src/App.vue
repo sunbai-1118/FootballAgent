@@ -1,5 +1,5 @@
 <template>
-  <div class="app">
+  <div class="app" :class="{ 'has-tab-bar': showTabBar }">
     <router-view v-slot="{ Component }">
       <template v-if="$route.meta.keepAlive">
         <keep-alive>
@@ -10,42 +10,22 @@
         <component :is="Component" />
       </template>
     </router-view>
+    <TabBar v-if="showTabBar" />
   </div>
 </template>
 
 <script setup>
-// App.vue 作为根组件
+import TabBar from './components/TabBar.vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+const showTabBar = computed(() => !['Login', 'Register'].includes(route.name))
 </script>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html, body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-size: 16px;
-  background-color: #f7f8fa;
-  color: #333;
-  height: 100%;
-  width: 100%;
-}
-
-.app {
-  max-width: 750px;
-  margin: 0 auto;
-  height: 100%;
-}
-
-/* 移动端适配 */
-@media screen and (max-width: 750px) {
-  html {
-    font-size: calc(100vw / 750 * 16);
-  }
+.app.has-tab-bar {
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
 }
 </style>

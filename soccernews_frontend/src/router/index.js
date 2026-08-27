@@ -29,8 +29,27 @@ const routes = [
     component: () => import('../views/Home.vue'),
     meta: {
       title: '首页',
-      keepAlive: true
+      keepAlive: true,
+      showTabBar: true
     }
+  },
+  {
+    path: '/football',
+    name: 'FootballHome',
+    component: () => import('../views/FootballHome.vue'),
+    meta: { title: '足球首页', keepAlive: true, showTabBar: true }
+  },
+  {
+    path: '/league',
+    name: 'LeaguePage',
+    component: () => import('../views/LeaguePage.vue'),
+    meta: { title: '联赛积分榜', keepAlive: true, showTabBar: true }
+  },
+  {
+    path: '/match-center',
+    name: 'MatchCenter',
+    component: () => import('../views/MatchCenter.vue'),
+    meta: { title: '比赛中心', keepAlive: true, showTabBar: true }
   },
   {
     path: '/news/detail/:id',
@@ -74,7 +93,8 @@ const routes = [
     component: () => import('../views/AIChat.vue'),
     meta: {
       title: 'AI问答',
-      keepAlive: true
+      keepAlive: true,
+      showTabBar: true
     }
   },
   {
@@ -83,7 +103,8 @@ const routes = [
     component: () => import('../views/My.vue'),
     meta: {
       title: '我的',
-      keepAlive: true
+      keepAlive: true,
+      showTabBar: true
     }
   },
   {

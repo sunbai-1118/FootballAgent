@@ -138,7 +138,7 @@ async def get_news_detail(
                 "id": r.id,
                 "title": r.title,
                 "image": r.image,
-                "publish_time": r.publish_time,
+                "publishTime": r.publish_time,
             }
             for r in related
         ],

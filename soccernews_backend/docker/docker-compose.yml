@@ -1,6 +1,6 @@
 # AI Agent 多模态检索基础设施
 # 一键启动:Qdrant 向量库 + 文本嵌入服务(bge) + 图片/多模态嵌入服务(Chinese-CLIP)
-# 使用: cd docker && docker compose up -d --build
+# 使用: docker compose up -d --build
 # 唯一项目名:避免与其它名为 "docker" 的 compose 项目(旧 data-agent 栈)冲突导致孤儿容器警告
 name: soccer-news-agent
 
@@ -16,7 +16,7 @@ services:
       - qdrant_data:/qdrant/storage
 
   text-embedding:
-    build: ./text-embedding
+    build: ./soccernews_backend/docker/text-embedding
     container_name: soccer-news-text-embedding
     restart: unless-stopped
     ports:
@@ -28,7 +28,7 @@ services:
       - hf_cache:/root/.cache/huggingface   # 模型下载缓存,避免重复下载
 
   image-embedding:
-    build: ./image-embedding
+    build: ./soccernews_backend/docker/image-embedding
     container_name: soccer-news-image-embedding
     restart: unless-stopped
     ports:

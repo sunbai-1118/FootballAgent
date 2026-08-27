@@ -95,7 +95,7 @@ export const useFavoriteStore = defineStore('favorite', {
     },
     
     // 取消收藏 - API请求
-    async removeFavoriteApi(newsId) {
+    async removeFavoriteApi(favoriteId) {
       const userStore = useUserStore();
       
       // 检查用户是否登录
@@ -105,7 +105,7 @@ export const useFavoriteStore = defineStore('favorite', {
       
       try {
         this.loading = true;
-        const response = await axios.delete(`${apiConfig.baseURL}/api/favorite/remove?newsId=${newsId}`, { 
+        const response = await axios.delete(`${apiConfig.baseURL}/api/favorite/remove?newsId=${favoriteId}`, {
           headers: { 
             Authorization: userStore.token 
           }

@@ -6,6 +6,7 @@ import { apiConfig } from '../../config/api';
 export const useHistoryStore = defineStore('history', {
   state: () => ({
     history: [],
+    loading: false,
   }),
   
   getters: {
@@ -23,6 +24,7 @@ export const useHistoryStore = defineStore('history', {
       }
       
       try {
+        this.loading = true;
         const response = await axios.post(`${apiConfig.baseURL}/api/history/add`, 
           { newsId },
           { 
@@ -40,6 +42,8 @@ export const useHistoryStore = defineStore('history', {
       } catch (error) {
         console.error('添加浏览历史请求失败:', error);
         return { success: false, message: '网络请求失败' };
+      } finally {
+        this.loading = false;
       }
     },
     
@@ -87,6 +91,7 @@ export const useHistoryStore = defineStore('history', {
       
       try {
         console.log('清空浏览历史API：开始请求');
+        this.loading = true;
         const response = await axios.delete(`${apiConfig.baseURL}/api/history/clear`, { 
           headers: { 
             Authorization: userStore.token 
@@ -105,6 +110,8 @@ export const useHistoryStore = defineStore('history', {
       } catch (error) {
         console.error('清空浏览历史API：请求异常', error);
         return { success: false, message: '网络请求失败' };
+      } finally {
+        this.loading = false;
       }
     },
     
@@ -128,6 +135,7 @@ export const useHistoryStore = defineStore('history', {
       
       try {
         console.log('删除浏览历史API：开始请求', id);
+        this.loading = true;
         const response = await axios.delete(`${apiConfig.baseURL}/api/history/delete/${id}`, { 
           headers: { 
             Authorization: userStore.token 
@@ -146,6 +154,8 @@ export const useHistoryStore = defineStore('history', {
       } catch (error) {
         console.error('删除浏览历史API：请求异常', error);
         return { success: false, message: '网络请求失败' };
+      } finally {
+        this.loading = false;
       }
     },
     
@@ -174,10 +184,12 @@ export const useHistoryStore = defineStore('history', {
       
       try {
         console.log('获取浏览历史API：开始请求');
+        this.loading = true;
         const response = await axios.get(`${apiConfig.baseURL}/api/history/list`, { 
           headers: { 
             Authorization: userStore.token 
-          } 
+          },
+          params: { page: 1, pageSize: 50 }
         });
         
         if (response.data.code === 200) {
@@ -196,6 +208,8 @@ export const useHistoryStore = defineStore('history', {
       } catch (error) {
         // console.error('获取浏览历史API：请求异常', error);
         return { success: false, message: '网络请求失败' };
+      } finally {
+        this.loading = false;
       }
     },
   },

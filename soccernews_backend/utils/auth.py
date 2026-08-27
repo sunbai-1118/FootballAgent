@@ -3,7 +3,6 @@ import secrets
 from datetime import datetime, timedelta
 
 from fastapi import Depends, Header, HTTPException
-from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,17 +14,17 @@ from utils.log_context import bind
 TOKEN_EXPIRE_DAYS = 7
 
 # 创建密码上下文
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
 
 # 密码加密
 def hash_password(password: str) -> str:
     """生成密码哈希"""
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=12)).decode('utf-8')
 
 # 密码校验
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """校验密码"""
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 # 生成随机令牌
 def generate_token() -> str:

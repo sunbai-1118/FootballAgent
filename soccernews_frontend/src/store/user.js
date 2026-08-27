@@ -144,6 +144,54 @@ export const useUserStore = defineStore('user', {
       }
     },
     
+    async updateUserProfile(payload) {
+      try {
+        if (!this.token) {
+          return { success: false, message: '未登录' };
+        }
+
+        const response = await axios.put(`${apiConfig.baseURL}/api/user/update`,
+          payload,
+          { headers: { Authorization: this.token } }
+        );
+
+        if (response.data && response.data.code === 200) {
+          this.userInfo = response.data.data;
+          return { success: true, message: response.data.message || '更新成功' };
+        }
+        return { success: false, message: response.data.message || '更新失败' };
+      } catch (error) {
+        console.error('更新用户信息请求失败:', error);
+        return { success: false, message: error.response?.data?.message || '更新失败，请稍后再试' };
+      }
+    },
+
+    async uploadAvatar(file) {
+      try {
+        if (!this.token) return { success: false, message: '未登录' };
+
+        const form = new FormData();
+        form.append('file', file);
+        const response = await axios.post(`${apiConfig.baseURL}/api/user/avatar`, form, {
+          headers: { Authorization: this.token, 'Content-Type': 'multipart/form-data' },
+        });
+
+        if (response.data.code !== 200) {
+          return { success: false, message: response.data.message || '头像上传失败' };
+        }
+
+        const url = `${apiConfig.baseURL}${response.data.data.url}`;
+        await axios.put(`${apiConfig.baseURL}/api/user/update`, { avatar: url }, {
+          headers: { Authorization: this.token },
+        });
+        this.userInfo.avatar = url;
+        return { success: true, url };
+      } catch (error) {
+        console.error('头像上传请求失败:', error);
+        return { success: false, message: error.response?.data?.message || '头像上传失败' };
+      }
+    },
+
     // 更新个人简介
     async updateUserBio(bio) {
       try {

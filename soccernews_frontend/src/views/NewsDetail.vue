@@ -5,7 +5,7 @@
       left-text="返回"
       left-arrow
       @click-left="onClickLeft"
-      fixed
+      sticky
     />
     
     <div class="detail-content" v-if="newsStore.newsDetail.id">
@@ -53,12 +53,14 @@
       </div>
     </div>
     
-    <van-empty v-else description="加载中..." />
+    <van-empty v-else image="error" description="资讯不存在或加载失败">
+      <van-button round type="primary" size="small" @click="loadDetail">重新加载</van-button>
+    </van-empty>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNewsStore } from '../store/modules/news'
 import { useHistoryStore } from '../store/modules/history'
@@ -82,14 +84,20 @@ const contentParagraphs = computed(() => {
   return newsStore.newsDetail.content.split('\n\n').filter(p => p.trim())
 })
 
+const loadDetail = async () => {
+  newsStore.newsDetail = {}
+  await newsStore.getNewsDetail(newsId.value)
+}
+
 // 返回上一页
 const onClickLeft = () => {
   router.back()
 }
 
 // 跳转到相关新闻
-const goToRelatedNews = (id) => {
-  router.push(`/news/detail/${id}`)
+const goToRelatedNews = async (id) => {
+  await router.push(`/news/detail/${id}`)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // 判断当前新闻是否已收藏
@@ -133,8 +141,8 @@ const toggleFavorite = async () => {
 }
 
 // 组件挂载时获取新闻详情并添加到浏览历史
-onMounted(async () => {
-  await newsStore.getNewsDetail(newsId.value)
+const initialize = async () => {
+  await loadDetail()
   
   // 添加到浏览历史
   if (newsStore.newsDetail.id) {
@@ -148,8 +156,6 @@ onMounted(async () => {
       }
     }
     
-    // 无论API是否成功，都添加到本地浏览历史
-    // historyStore.addHistory(newsStore.newsDetail);
   }
   
   // 加载收藏数据
@@ -167,18 +173,28 @@ onMounted(async () => {
       }
     }
   }
+}
+
+onMounted(initialize)
+
+watch(newsId, () => {
+  if (route.name === 'NewsDetail') initialize()
 })
 </script>
 
 <style scoped>
 .news-detail {
-  padding-top: 46px;
   background-color: #fff;
   min-height: 100vh;
+  padding-bottom: calc(72px + var(--safe-area-inset-bottom));
 }
 
 .detail-content {
-  padding: 16px;
+  padding: 0;
+}
+
+.detail-content {
+  padding: 0;
 }
 
 .title-container {
@@ -189,7 +205,7 @@ onMounted(async () => {
 }
 
 .title {
-  font-size: 22px;
+  font-size: var(--font-xl);
   font-weight: bold;
   line-height: 1.4;
   margin: 0;
@@ -206,7 +222,7 @@ onMounted(async () => {
 }
 
 .favorite-btn.is-favorite {
-  color: #ff9500;
+  color: var(--grass-500);
 }
 
 .info {
@@ -226,13 +242,14 @@ onMounted(async () => {
 
 .cover img {
   width: 100%;
-  border-radius: 4px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
 }
 
 .content {
-  font-size: 16px;
-  line-height: 1.8;
-  color: #333;
+  font-size: var(--font-base);
+  line-height: 1.7;
+  color: var(--text-color-light);
 }
 
 .content p {
@@ -241,13 +258,13 @@ onMounted(async () => {
 }
 
 .related-news {
-  margin-top: 24px;
-  padding-top: 16px;
+  margin-top: 18px;
+  padding-top: 12px;
   border-top: 8px solid #f5f5f5;
 }
 
 .related-news h3 {
-  font-size: 18px;
+  font-size: var(--font-md);
   margin: 0 0 16px;
 }
 

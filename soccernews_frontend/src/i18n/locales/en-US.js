@@ -16,7 +16,8 @@ export default {
   },
   nav: {
     home: 'Home',
-    aiChat: 'AI Chat',
+    football: 'Data',
+    aiChat: 'AI Assistant',
     my: 'My'
   },
   home: {

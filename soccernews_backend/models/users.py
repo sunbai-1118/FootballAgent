@@ -30,6 +30,7 @@ class User(Base):
     )
     bio: Mapped[Optional[str]] = mapped_column(String(500), comment="个人简介")
     phone: Mapped[Optional[str]] = mapped_column(String(20), unique=True, comment="手机号")
+    favorite_team: Mapped[Optional[str]] = mapped_column(String(100), comment="主队")
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), comment="创建时间")
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), server_onupdate=func.now(), comment="更新时间"

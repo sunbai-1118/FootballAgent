@@ -7,7 +7,7 @@
       @click-left="onClickLeft"
       right-text="清空"
       @click-right="onClickClear"
-      fixed
+      sticky
     />
     
     <div class="history-list" v-if="historyStore.getHistory.length">
@@ -39,7 +39,7 @@
       </div>
     </div>
     
-    <van-empty v-else description="暂无浏览历史" />
+    <van-empty v-else :description="historyStore.loading ? '加载中...' : '暂无浏览历史'" />
   </div>
 </template>
 
@@ -133,10 +133,15 @@ onMounted(async () => {
     // 如果API请求失败或用户未登录，则从本地加载
     if (!result || !result.success) {
       historyStore.loadHistory();
+      return;
     }
   } catch (error) {
     console.error('浏览历史页面：API请求异常', error);
     // 出错时从本地加载
+    historyStore.loadHistory();
+  }
+
+  if (!historyStore.getHistory.length) {
     historyStore.loadHistory();
   }
 });
@@ -144,19 +149,18 @@ onMounted(async () => {
 
 <style scoped>
 .history-container {
-  padding-top: 46px;
   padding-bottom: 20px;
-  background-color: #f7f8fa;
+  background-color: var(--background-color);
   min-height: 100vh;
 }
 
 .history-list {
-  padding: 10px;
+  padding: 0;
 }
 
 .news-item {
   display: flex;
-  padding: 10px 0;
+  padding: 8px 0;
 }
 
 .news-image {
@@ -227,8 +231,9 @@ onMounted(async () => {
 .history-item {
   position: relative;
   margin-bottom: 10px;
-  background-color: #fff;
-  border-radius: 8px;
+  background-color: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -237,7 +242,7 @@ onMounted(async () => {
   top: 50%;
   right: 10px;
   transform: translateY(-50%);
-  z-index: 10;
+  z-index: 1;
   width: 24px;
   height: 24px;
   padding: 0;

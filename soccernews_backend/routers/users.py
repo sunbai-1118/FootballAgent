@@ -1,7 +1,8 @@
 """用户相关 API 路由"""
-from http.client import responses
+from pathlib import Path
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.functions import user
 
@@ -11,6 +12,8 @@ from models.users import User
 from schemas.users import PasswordUpdate, UserLogin, UserRegister, UserUpdate, UserAuthResponse, UserInFoResponse
 from utils.auth import create_user_token, get_current_user, verify_password
 from utils.response import success
+
+AVATAR_DIR = Path(__file__).parent.parent / "uploads" / "avatars"
 
 # 1.1）创建APIRouter实例
 router = APIRouter(prefix="/api/user", tags=["用户模块"])
@@ -114,3 +117,56 @@ async def update_password(
     return success(
         message="修改密码成功",
     )
+
+
+@router.post("/avatar", summary="上传用户头像")
+async def upload_avatar(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+):
+    max_size = 5 * 1024 * 1024
+    declared_size = int(request.headers.get("content-length") or 0)
+    if declared_size > max_size + 64 * 1024:
+        raise HTTPException(status_code=400, detail="头像文件不能超过 5MB")
+
+    content_type = request.headers.get("content-type", "")
+    if "multipart/form-data" not in content_type or "boundary=" not in content_type:
+        raise HTTPException(status_code=400, detail="请选择头像文件")
+
+    boundary = content_type.split("boundary=", 1)[1].strip().strip('"').encode()
+    body = await request.body()
+    delimiter = f"--{boundary.decode()}".encode()
+    parts = body.split(delimiter)
+
+    disposition = None
+    for part in parts[1:]:
+        if b'filename="' in part:
+            disposition = part
+            break
+    if disposition is None:
+        raise HTTPException(status_code=400, detail="请选择头像文件")
+
+    original_name = disposition.split(b'filename="', 1)[1].split(b'"', 1)[0]
+    original_name = original_name.decode("utf-8", errors="ignore").lower()
+    allowed = {".jpg", ".jpeg", ".png", ".webp"}
+    suffix = next((ext for ext in allowed if original_name.endswith(ext)), None)
+    if not suffix:
+        raise HTTPException(status_code=400, detail="仅支持 JPG / PNG / WebP 图片")
+
+    marker = disposition.find(b"\r\n\r\n")
+    if marker < 0:
+        raise HTTPException(status_code=400, detail="头像文件格式错误")
+    content = disposition[marker + 4 :]
+    if content.endswith(b"\r\n"):
+        content = content[:-2]
+    if not content:
+        raise HTTPException(status_code=400, detail="头像文件为空")
+    if len(content) > max_size:
+        raise HTTPException(status_code=400, detail="头像文件不能超过 5MB")
+
+    file_name = f"user_{current_user.id}_{uuid4().hex}{suffix}"
+    AVATAR_DIR.mkdir(parents=True, exist_ok=True)
+    (AVATAR_DIR / file_name).write_bytes(content)
+
+    avatar_url = f"/uploads/avatars/{file_name}"
+    return success(data={"url": avatar_url}, message="上传成功")

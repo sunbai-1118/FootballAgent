@@ -12,10 +12,13 @@
         <van-cell :title="$t('settings.languageSettings')" is-link @click="showLanguagePopup = true" />
       </van-cell-group>
       
-      <van-cell-group inset :title="$t('settings.account')">
-        <van-cell :title="$t('settings.privacySettings')" is-link />
-        <van-cell :title="$t('settings.notificationSettings')" is-link />
-        <van-cell :title="$t('settings.aboutUs')" is-link />
+      <van-cell-group inset title="应用信息">
+        <van-cell title="应用版本" value="足球头条 v1.0" />
+      </van-cell-group>
+
+      <van-cell-group v-if="isLogin" inset title="账号">
+        <van-cell title="切换账号" is-link icon="exchange" @click="handleSwitchAccount" />
+        <van-cell :title="$t('my.logout')" icon="revoke" @click="handleLogout" />
       </van-cell-group>
     </div>
     
@@ -75,14 +78,17 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { showToast } from 'vant';
+import { showDialog, showToast } from 'vant';
 import { useThemeStore } from '../store/theme';
 import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '../store/language';
+import { useUserStore } from '../store/user';
 
 const router = useRouter();
 const themeStore = useThemeStore();
 const languageStore = useLanguageStore();
+const userStore = useUserStore();
+const isLogin = computed(() => userStore.getLoginStatus);
 const { t, locale } = useI18n();
 
 // 返回上一页
@@ -119,6 +125,32 @@ const changeLanguage = () => {
   // 强制刷新页面以应用语言更改
   window.location.reload();
 };
+
+const handleSwitchAccount = () => {
+  showDialog({
+    title: '切换账号',
+    message: '切换账号将退出当前登录，是否继续？',
+    showCancelButton: true,
+  }).then((action) => {
+    if (action === 'confirm') {
+      userStore.logout();
+      router.push('/login');
+    }
+  });
+};
+
+const handleLogout = () => {
+  showDialog({
+    title: t('common.confirm'),
+    message: `${t('my.logout')}?`,
+    showCancelButton: true,
+  }).then((action) => {
+    if (action === 'confirm') {
+      userStore.logout();
+      showToast('已退出登录');
+    }
+  });
+};
 </script>
 
 <style scoped>
@@ -126,26 +158,25 @@ const changeLanguage = () => {
   min-height: 100vh;
   background-color: var(--background-color);
   color: var(--text-color);
-  padding-top: 46px;
   padding-bottom: 20px;
 }
 
 .settings-list {
-  margin-top: 20px;
+  margin-top: 0;
 }
 
 .popup-title {
   text-align: center;
-  padding: 16px;
+  padding: 12px;
   font-size: 16px;
   font-weight: bold;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .theme-list {
   display: flex;
   flex-wrap: wrap;
-  padding: 16px;
+  padding: 0 12px;
 }
 
 .theme-item {
@@ -165,12 +196,12 @@ const changeLanguage = () => {
   border: 2px solid transparent;
 }
 
-.theme-item.active .theme-color {
-  border-color: #1989fa;
-}
-
 .theme-name {
   font-size: 12px;
+}
+
+.theme-item.active .theme-color {
+  border-color: var(--pitch-700);
 }
 
 .popup-footer {
@@ -182,6 +213,6 @@ const changeLanguage = () => {
 }
 
 .language-active {
-  background-color: #f5f5f5;
+  background-color: var(--secondary-color);
 }
 </style>

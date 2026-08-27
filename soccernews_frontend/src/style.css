@@ -1,149 +1,286 @@
-/* 移动端适配基础样式 */
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  /* 主题变量 */
-  --primary-color: #1989fa;
-  --text-color: #333;
-  --text-color-light: #666;
-  --text-color-lighter: #999;
-  --border-color: #ebedf0;
-  --background-color: #f7f8fa;
-  --white: #fff;
+  --font-xs: 11px;
+  --font-sm: 12px;
+  --font-base: 13px;
+  --font-md: 15px;
+  --font-lg: 17px;
+  --font-xl: 20px;
+  --pitch-900: #062d20;
+  --pitch-800: #08412e;
+  --pitch-700: #0a5a3f;
+  --grass-500: #00b86c;
+  --grass-300: #7ff0b1;
+  --accent: var(--grass-500);
+  --primary-color: var(--grass-500);
+  --secondary-color: #eafaf2;
+  --text-color: #17251f;
+  --text-color-light: #53655d;
+  --text-color-lighter: #78877f;
+  --border-color: #dbe7e0;
+  --background-color: #eff6f2;
+  --card-bg: #ffffff;
+  --white: #ffffff;
+  --shadow-sm: 0 2px 10px rgba(6, 45, 32, .07);
+  --shadow-lg: 0 18px 40px rgba(6, 45, 32, .16);
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 22px;
   --safe-area-inset-bottom: env(safe-area-inset-bottom);
-
-  color-scheme: light dark;
+  color-scheme: light;
   color: var(--text-color);
-  background-color: var(--background-color);
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+  background: var(--background-color);
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* 移动端适配 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 html {
   -webkit-tap-highlight-color: transparent;
+  background: var(--background-color);
 }
 
 body {
-  font-size: 14px;
-  color: var(--text-color);
-  background-color: var(--background-color);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-y: auto;
+  min-height: 100vh;
   overflow-x: hidden;
+  color: var(--text-color);
+  background:
+    radial-gradient(circle at 100% 0, rgba(0, 184, 108, .14), transparent 28rem),
+    radial-gradient(circle at 0 100%, rgba(8, 65, 46, .09), transparent 24rem),
+    var(--background-color);
+  font-size: var(--font-base);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* 适配iPhone底部安全区域 */
+.app {
+  width: 100%;
+  max-width: 750px;
+  min-height: 100vh;
+  margin: 0 auto;
+}
+
+.page-header {
+  padding: 14px 16px 8px;
+}
+
+.page-header h1 {
+  font-size: var(--font-lg);
+  color: var(--pitch-900);
+}
+
+.page-header p {
+  margin-top: 2px;
+  font-size: var(--font-sm);
+  color: var(--text-color-light);
+}
+
+.widget-card {
+  margin: 0 12px 12px;
+  padding: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.league-picker {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 10px;
+  overflow-x: auto;
+}
+
+.league-picker button {
+  flex: 0 0 auto;
+  padding: 6px 11px;
+  font-size: var(--font-sm);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--text-color-light);
+  cursor: pointer;
+}
+
+.league-picker button.active {
+  background: linear-gradient(135deg, var(--pitch-700), var(--grass-500));
+  border-color: transparent;
+  color: white;
+}
+
+.football-page api-games,
+.football-page api-standings,
+.football-page api-league {
+  display: block;
+  min-height: 260px;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+.van-nav-bar {
+  --van-nav-bar-background: linear-gradient(115deg, var(--pitch-900), var(--pitch-700) 72%, #12734d);
+  --van-nav-bar-height: 48px;
+  --van-nav-bar-title-text-color: var(--white);
+  --van-nav-bar-text-color: rgba(255, 255, 255, .88);
+  --van-nav-bar-icon-color: var(--white);
+  box-shadow: 0 4px 18px rgba(6, 45, 32, .18);
+}
+
+.van-nav-bar::after {
+  display: none;
+}
+
+/* 统一导航为粘性布局：自身占位，避免 fixed 导航遮内容，也避免页面重复预留空白 */
+.van-nav-bar,
+.van-nav-bar--fixed {
+  position: sticky !important;
+  top: 0;
+  z-index: 1000 !important;
+}
+
 .van-tabbar {
+  --van-tabbar-background: rgba(255, 255, 255, .94);
+  width: 100%;
+  max-width: 750px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: calc(56px + var(--safe-area-inset-bottom));
   padding-bottom: var(--safe-area-inset-bottom);
+  border-top: 1px solid rgba(6, 45, 32, .08);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 -8px 24px rgba(6, 45, 32, .07);
+  z-index: 999 !important;
 }
 
-/* 滚动条优化 */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+.van-tabbar-item--active {
+  color: var(--pitch-700);
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+.van-tabbar-item--active .van-tabbar-item__icon {
+  transform: translateY(-1px) scale(1.08);
 }
 
-::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 3px;
+.van-tabbar-item__icon {
+  transition: transform .2s ease;
 }
 
-/* 页面过渡动画 */
-.slide-right-enter-active,
-.slide-right-leave-active,
-.slide-left-enter-active,
-.slide-left-leave-active {
-  transition: all 0.3s;
+.van-button--primary {
+  --van-button-primary-background: linear-gradient(120deg, var(--pitch-800), var(--grass-500));
+  --van-button-primary-border-color: transparent;
+  box-shadow: 0 8px 20px rgba(0, 184, 108, .25);
 }
 
-.slide-right-enter-from {
-  opacity: 0;
-  transform: translate3d(-100%, 0, 0);
+.van-cell-group--inset {
+  margin: 12px 16px !important;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
-.slide-right-leave-to {
-  opacity: 0;
-  transform: translate3d(100%, 0, 0);
+.page-shell {
+  min-height: 100vh;
+  padding: 0 0 calc(72px + var(--safe-area-inset-bottom));
 }
 
-.slide-left-enter-from {
-  opacity: 0;
-  transform: translate3d(100%, 0, 0);
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  color: var(--white);
+  font-size: 17px;
+  text-decoration: none;
+  background: linear-gradient(145deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, .05));
+  border: 1px solid rgba(255, 255, 255, .18);
 }
 
-.slide-left-leave-to {
-  opacity: 0;
-  transform: translate3d(-100%, 0, 0);
+.hero-band {
+  position: relative;
+  padding: 16px 16px 22px;
+  overflow: hidden;
+  color: var(--white);
+  background:
+    radial-gradient(circle at 82% 18%, rgba(127, 240, 177, .3), transparent 15rem),
+    linear-gradient(125deg, var(--pitch-900), var(--pitch-700));
+  clip-path: ellipse(118% 100% at 50% 0);
 }
 
-/* 文本溢出省略号 */
+.hero-band::before {
+  content: "";
+  position: absolute;
+  inset: auto -42px -64px auto;
+  width: 180px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .11);
+}
+
+.hero-band::after {
+  content: "";
+  position: absolute;
+  inset: 58% auto auto -30px;
+  width: 140px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(127, 240, 177, .8), transparent);
+  opacity: .7;
+}
+
+.section-card {
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.empty-state {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--text-color-light);
+}
+
 .ellipsis {
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .ellipsis-2 {
   display: -webkit-box;
-  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
   -webkit-line-clamp: 2;
   line-clamp: 2;
-  overflow: hidden;
-}
-
-/* 骨架屏动画 */
-@keyframes skeleton-loading {
-  0% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0 50%;
-  }
+  -webkit-box-orient: vertical;
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #f2f2f2 25%, #e6e6e6 37%, #f2f2f2 63%);
+  background: linear-gradient(90deg, rgba(219, 231, 224, .35), rgba(219, 231, 224, .85), rgba(219, 231, 224, .35));
   background-size: 400% 100%;
   animation: skeleton-loading 1.4s ease infinite;
 }
 
-/* 点击反馈效果 */
-.click-effect {
-  position: relative;
-  overflow: hidden;
+@keyframes skeleton-loading {
+  from { background-position: 100% 50%; }
+  to { background-position: 0 50%; }
 }
 
-.click-effect::after {
-  content: '';
-  display: block;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  background-image: radial-gradient(circle, #000 10%, transparent 10.01%);
-  background-repeat: no-repeat;
-  background-position: 50%;
-  transform: scale(10, 10);
-  opacity: 0;
-  transition: transform 0.5s, opacity 1s;
-}
-
-.click-effect:active::after {
-  transform: scale(0, 0);
-  opacity: 0.1;
-  transition: 0s;
-}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { border-radius: 99px; background: rgba(6, 45, 32, .22); }

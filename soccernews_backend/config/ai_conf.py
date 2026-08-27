@@ -27,7 +27,7 @@ DEEPSEEK_TIMEOUT = int(os.getenv("DEEPSEEK_TIMEOUT", "120"))  # 秒
 # ==================== Qwen（阿里云百炼 / DashScope）配置 ====================
 QWEN_API_KEY = os.getenv("QWEN_API_KEY")
 QWEN_BASE_URL = os.getenv("QWEN_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
-QWEN_MODEL = os.getenv("QWEN_MODEL", "qwen3.7-flash")
+QWEN_MODEL = os.getenv("QWEN_MODEL", "qwen3.8-27b")
 QWEN_TIMEOUT = int(os.getenv("QWEN_TIMEOUT", "120"))  # 秒
 # 是否开启 qwen 思考（reasoning）：false 时传 enable_thinking=false，大幅降输出 token（牺牲推理质量）
 QWEN_ENABLE_THINKING = os.getenv("QWEN_ENABLE_THINKING", "false").lower() in ("1", "true", "yes", "on")

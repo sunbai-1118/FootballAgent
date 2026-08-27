@@ -7,7 +7,7 @@
       @click-left="onClickLeft"
       right-text="清空"
       @click-right="onClickClear"
-      fixed
+      sticky
     />
     
     <div class="favorite-list" v-if="favoriteStore.getFavorites.length">
@@ -39,7 +39,7 @@
       </div>
     </div>
     
-    <van-empty v-else description="暂无收藏内容" />
+    <van-empty v-else :description="favoriteStore.loading ? '加载中...' : '暂无收藏内容'" />
   </div>
 </template>
 
@@ -66,8 +66,9 @@ const goToNewsDetail = (id) => {
 const removeFavorite = async (id) => {
   const result = await favoriteStore.removeFavoriteApi(id);
   if (result.success) {
-    // API请求成功后，更新本地收藏列表
-    favoriteStore.removeFavorite(id);
+    await favoriteStore.getFavoriteListApi();
+  } else if (!result.isLocal) {
+    showToast(result.message || '删除失败');
   }
 };
 
@@ -111,8 +112,7 @@ onMounted(async () => {
     const result = await favoriteStore.getFavoriteListApi();
     if (!result || !result.success) {
       // 如果API请求失败，回退到本地存储
-      // favoriteStore.loadFavorites();
-      console.log('从本地存储加载收藏列表');  
+      favoriteStore.loadFavorites();
     }
   } catch (error) {
     favoriteStore.loadFavorites();
@@ -122,19 +122,18 @@ onMounted(async () => {
 
 <style scoped>
 .favorite-container {
-  padding-top: 46px;
   padding-bottom: 20px;
-  background-color: #f7f8fa;
+  background-color: var(--background-color);
   min-height: 100vh;
 }
 
 .favorite-list {
-  padding: 10px;
+  padding: 0;
 }
 
 .news-item {
   display: flex;
-  padding: 10px 0;
+  padding: 8px 0;
 }
 
 .news-image {
@@ -185,8 +184,9 @@ onMounted(async () => {
 .favorite-item {
   position: relative;
   margin-bottom: 10px;
-  background-color: #fff;
-  border-radius: 8px;
+  background-color: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -195,7 +195,7 @@ onMounted(async () => {
   top: 50%;
   right: 10px;
   transform: translateY(-50%);
-  z-index: 10;
+  z-index: 1;
   width: 24px;
   height: 24px;
   padding: 0;

@@ -4,11 +4,13 @@ import logging
 import re
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 import config
@@ -18,7 +20,7 @@ from config.cache_conf import init_cache,close_cache
 from config.db_conf import engine
 from config.logging_conf import setup_logging
 from config.otel_conf import setup_otel
-from routers import ai_chat, favorite, history, news, users
+from routers import ai_chat, favorite, history, news, users, widget_proxy
 from utils.exception_handler import register_exception_handler
 from utils.log_context import bind
 
@@ -138,6 +140,8 @@ app.include_router(news.router)
 app.include_router(favorite.router)
 app.include_router(history.router)
 app.include_router(ai_chat.router)
+app.include_router(widget_proxy.router)
+app.mount("/uploads", StaticFiles(directory=Path(__file__).parent / "uploads"), name="uploads")
 
 
 @app.get("/", summary="服务健康检查")
